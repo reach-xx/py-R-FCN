@@ -15,7 +15,8 @@ import numpy as np
 import cv2
 import caffe
 from fast_rcnn.nms_wrapper import nms
-import cPickle
+#import cPickle
+import _pickle as cPickle
 from utils.blob import im_list_to_blob
 import os
 
@@ -42,6 +43,8 @@ def _get_image_blob(im):
 
     for target_size in cfg.TEST.SCALES:
         im_scale = float(target_size) / float(im_size_min)
+        print("target_size: ", target_size )
+        print("im_size_min: ", im_size_min)
         # Prevent the biggest axis from being more than MAX_SIZE
         if np.round(im_scale * im_size_max) > cfg.TEST.MAX_SIZE:
             im_scale = float(cfg.TEST.MAX_SIZE) / float(im_size_max)
@@ -286,13 +289,12 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False):
                     all_boxes[j][i] = all_boxes[j][i][keep, :]
         _t['misc'].toc()
 
-        print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
+        print('im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
               .format(i + 1, num_images, _t['im_detect'].average_time,
-                      _t['misc'].average_time)
+                      _t['misc'].average_time))
 
     det_file = os.path.join(output_dir, 'detections.pkl')
     with open(det_file, 'wb') as f:
         cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
 
-    print 'Evaluating detections'
-    imdb.evaluate_detections(all_boxes, output_dir)
+    print('Evaluating detections',imdb.evaluate_detections(all_boxes, output_dir))
