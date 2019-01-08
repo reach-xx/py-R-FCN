@@ -16,7 +16,7 @@ import cv2
 import caffe
 from fast_rcnn.nms_wrapper import nms
 #import cPickle
-import _pickle as cPickle
+import pickle as cPickle
 from utils.blob import im_list_to_blob
 import os
 
@@ -43,8 +43,8 @@ def _get_image_blob(im):
 
     for target_size in cfg.TEST.SCALES:
         im_scale = float(target_size) / float(im_size_min)
-        print("target_size: ", target_size )
-        print("im_size_min: ", im_size_min)
+        print(("target_size: ", target_size ))
+        print(("im_size_min: ", im_size_min))
         # Prevent the biggest axis from being more than MAX_SIZE
         if np.round(im_scale * im_size_max) > cfg.TEST.MAX_SIZE:
             im_scale = float(cfg.TEST.MAX_SIZE) / float(im_size_max)
@@ -151,6 +151,7 @@ def im_detect(net, im, boxes=None):
     # do forward
     forward_kwargs = {'data': blobs['data'].astype(np.float32, copy=False)}
     if cfg.TEST.HAS_RPN:
+        print("HAS_RPN---------------------------------------------TRUE")
         forward_kwargs['im_info'] = blobs['im_info'].astype(np.float32, copy=False)
     else:
         forward_kwargs['rois'] = blobs['rois'].astype(np.float32, copy=False)
@@ -190,7 +191,7 @@ def vis_detections(im, class_name, dets, thresh=0.3):
     """Visual debugging of detections."""
     import matplotlib.pyplot as plt
     im = im[:, :, (2, 1, 0)]
-    for i in xrange(np.minimum(10, dets.shape[0])):
+    for i in range(np.minimum(10, dets.shape[0])):
         bbox = dets[i, :4]
         score = dets[i, -1]
         if score > thresh:
@@ -211,10 +212,10 @@ def apply_nms(all_boxes, thresh):
     """
     num_classes = len(all_boxes)
     num_images = len(all_boxes[0])
-    nms_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
-    for cls_ind in xrange(num_classes):
-        for im_ind in xrange(num_images):
+    nms_boxes = [[[] for _ in range(num_images)]
+                 for _ in range(num_classes)]
+    for cls_ind in range(num_classes):
+        for im_ind in range(num_images):
             dets = all_boxes[cls_ind][im_ind]
             if dets == []:
                 continue
@@ -233,8 +234,8 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False):
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
     #    (x1, y1, x2, y2, score)
-    all_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(imdb.num_classes)]
+    all_boxes = [[[] for _ in range(num_images)]
+                 for _ in range(imdb.num_classes)]
 
     output_dir = get_output_dir(imdb, net)
 
@@ -244,7 +245,7 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False):
     if not cfg.TEST.HAS_RPN:
         roidb = imdb.roidb
 
-    for i in xrange(num_images):
+    for i in range(num_images):
         # filter out any ground truth boxes
         if cfg.TEST.HAS_RPN:
             box_proposals = None
@@ -263,7 +264,7 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False):
 
         _t['misc'].tic()
         # skip j = 0, because it's the background class
-        for j in xrange(1, imdb.num_classes):
+        for j in range(1, imdb.num_classes):
             inds = np.where(scores[:, j] > thresh)[0]
             cls_scores = scores[inds, j]
             if cfg.TEST.AGNOSTIC:
@@ -281,20 +282,20 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False):
         # Limit to max_per_image detections *over all classes*
         if max_per_image > 0:
             image_scores = np.hstack([all_boxes[j][i][:, -1]
-                                      for j in xrange(1, imdb.num_classes)])
+                                      for j in range(1, imdb.num_classes)])
             if len(image_scores) > max_per_image:
                 image_thresh = np.sort(image_scores)[-max_per_image]
-                for j in xrange(1, imdb.num_classes):
+                for j in range(1, imdb.num_classes):
                     keep = np.where(all_boxes[j][i][:, -1] >= image_thresh)[0]
                     all_boxes[j][i] = all_boxes[j][i][keep, :]
         _t['misc'].toc()
 
-        print('im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
+        print(('im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
               .format(i + 1, num_images, _t['im_detect'].average_time,
-                      _t['misc'].average_time))
+                      _t['misc'].average_time)))
 
     det_file = os.path.join(output_dir, 'detections.pkl')
     with open(det_file, 'wb') as f:
         cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
 
-    print('Evaluating detections',imdb.evaluate_detections(all_boxes, output_dir))
+    print(('Evaluating detections',imdb.evaluate_detections(all_boxes, output_dir)))

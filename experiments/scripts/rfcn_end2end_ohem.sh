@@ -49,17 +49,18 @@ exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 
 
-time ./tools/train_net.py --gpu ${GPU_ID} \
-  --solver models/${PT_DIR}/${NET}/rfcn_end2end/solver_ohem.prototxt \
-  --weights data/imagenet_models/${NET}-model.caffemodel \
-  --imdb ${TRAIN_IMDB} \
-  --iters ${ITERS} \
-  --cfg experiments/cfgs/rfcn_end2end_ohem.yml \
-  ${EXTRA_ARGS}
+#time ./tools/train_net.py --gpu ${GPU_ID} \
+#  --solver models/${PT_DIR}/${NET}/rfcn_end2end/solver_ohem.prototxt \
+#  --weights data/imagenet_models/${NET}-model.caffemodel \
+#  --imdb ${TRAIN_IMDB} \
+#  --iters ${ITERS} \
+#  --cfg experiments/cfgs/rfcn_end2end_ohem.yml \
+#  ${EXTRA_ARGS}
 
 
 set +x
-NET_FINAL=`tail -n 100 ${LOG} | grep -B 1 "done solving" | grep "Wrote snapshot" | awk '{print $4}'`
+#NET_FINAL=`tail -n 100 ${LOG} | grep -B 1 "done solving" | grep "Wrote snapshot" | awk '{print $4}'`
+NET_FINAL="/opt/yang/reach/models_learn/py-R-FCN/output/rfcn_end2end_ohem/voc_2007_trainval+voc_2012_trainval/resnet50_rfcn_ohem_iter_110000.caffemodel"
 set -x
 
 time ./tools/test_net.py --gpu ${GPU_ID} \
